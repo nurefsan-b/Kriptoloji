@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Mesaj Şifreleme</title>
+    <link rel="stylesheet" href="/static/css/client.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="/static/images/lock.webp" alt="Kilit İkonu">
+            <h2 style="color: white;">İstemci - Mesaj Şifreleme</h2>
+        </div>
+        
+    <div>
+        <label>Şifreleme Yöntemi</label>
+        <select id="sifrele-yontem">
+            <option value="caesar">Caesar Cipher</option>
+            <option value="vigenere">Vigenère Cipher</option>
+            <option value="substitution">Substitution Cipher</option>
+            <option value="affine">Affine Cipher</option>
+        </select>
+    </div>
+
+    <div>
+        <label>Anahtar</label>
+        <input type="text" id="anahtar" placeholder="Şifreleme anahtarını girin">
+        <small id="anahtar-aciklama"></small>
+    </div>
+
+        <div>
+            <label>Mesaj</label>
+            <textarea id="mesaj" rows="4" placeholder="Şifrelenecek mesajınızı buraya yazın..."></textarea>
+        </div>
+
+        <button class="button" onclick="sifreleVeGonder()">
+            <img src="/static/images/lock.webp" alt="Kilit İkonu">
+            Şifrele ve Gönder
+        </button>
+    </div>
+    <script src="/static/js/client.js"></script>
+</body>
+</html>
