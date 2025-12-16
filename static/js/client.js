@@ -32,6 +32,11 @@ function updateKeyHint() {
             keyInput.placeholder = 'a,b şeklinde iki sayı girin';
             keyHint.textContent = 'Örnek: 5,8 (a ve b sayıları virgülle ayrılmış)';
             break;
+        case 'playfair':
+            keyInput.type = 'text';
+            keyInput.placeholder = 'Anahtar kelimeyi girin';
+            keyHint.textContent = 'Sadece harflerden oluşan bir kelime girin';
+            break;
     }
 }
 
