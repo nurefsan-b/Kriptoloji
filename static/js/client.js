@@ -37,7 +37,13 @@ function updateKeyHint() {
             keyInput.placeholder = 'Anahtar kelimeyi girin';
             keyHint.textContent = 'Sadece harflerden oluşan bir kelime girin';
             break;
-    }
+        case 'polybius':
+            keyInput.type = 'text';
+            keyInput.placeholder = 'Anahtar gerekmez (Sabit 5x5)';
+            keyInput.disabled = true; // Polybius için anahtara gerek yoksa
+            keyHint.textContent = 'Standart 5x5 tablo kullanılır (J=I)';
+            break;
+        }
 }
 
 function sifreleVeGonder() {
@@ -45,14 +51,14 @@ function sifreleVeGonder() {
     const anahtar = document.getElementById('anahtar').value;
     const yontem = document.getElementById('sifrele-yontem').value;
     
-    if (!mesaj || !anahtar) {
-        alert('Lütfen mesaj ve anahtar girin!');
+    if (!mesaj || (!anahtar && yontem !== 'polybius')) {
+        alert('Lütfen mesaj ve (bu yöntem için gerekliyse) anahtar girin!');
         return;
     }
 
     const data = {
         method: yontem,
-        key: anahtar,
+        key: anahtar || "0", // Polybius ise boş gitmesin diye "0" gönderebilirsin
         message: mesaj,
         encrypted: true
     };

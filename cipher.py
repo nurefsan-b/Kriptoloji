@@ -3,6 +3,7 @@ from Klasik_Kripto.vigenere import vigenere_sifreleme, vigenere_desifreleme
 from Klasik_Kripto.substitution import substitution_sifrele, substitution_desifrele
 from Klasik_Kripto.affine import affine_sifrele, affine_desifrele
 from Klasik_Kripto.playfair import playfair_encrypt, playfair_decrypt
+from Klasik_Kripto.polybius import polybius_sifrele, polybius_desifrele
 
 class CryptoMethods:
     @staticmethod
@@ -19,6 +20,8 @@ class CryptoMethods:
                 return affine_sifrele(text, a, b)
             elif method == "playfair":
                 return playfair_encrypt(text, key)
+            elif method == "polybius":
+                return polybius_sifrele(text)
             else:
                 raise ValueError(f"Unsupported encryption method: {method}")
         except Exception as e:
@@ -44,7 +47,10 @@ class CryptoMethods:
                     raise ValueError("Affine anahtarı 'a,b' formatında olmalıdır!")
             elif method == "playfair":
                 return playfair_decrypt(text, key)
+            elif method == "polybius":
+                return polybius_desifrele(text)
             else:
                 raise ValueError(f"Desteklenmeyen şifreleme yöntemi: {method}")
         except Exception as e:
             raise ValueError(f"Deşifreleme hatası: {str(e)}")
+        
