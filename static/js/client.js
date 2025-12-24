@@ -3,7 +3,7 @@ const ws = new WebSocket(`ws://${window.location.host}/ws`);
 document.addEventListener('DOMContentLoaded', function() {
     const methodSelect = document.getElementById('sifrele-yontem');
     methodSelect.addEventListener('change', updateKeyHint);
-    updateKeyHint(); // Initial update
+    updateKeyHint();
 });
 
 function updateKeyHint() {
@@ -40,8 +40,20 @@ function updateKeyHint() {
         case 'polybius':
             keyInput.type = 'text';
             keyInput.placeholder = 'Anahtar gerekmez (Sabit 5x5)';
-            keyInput.disabled = true; // Polybius için anahtara gerek yoksa
+            keyInput.disabled = true; 
             keyHint.textContent = 'Standart 5x5 tablo kullanılır (J=I)';
+            break;
+        case 'rail_fence':
+            keyInput.type = 'number';
+            keyInput.placeholder = 'Ray (Satır) sayısını girin (örn: 3)';
+            keyHint.textContent = 'En az 2 olmalıdır.';
+            break;
+            
+        case 'pigpen':
+            keyInput.type = 'text';
+            keyInput.placeholder = 'Anahtar gerekmez';
+            keyInput.disabled = true;
+            keyHint.textContent = 'Grafiksel Mason şifresi kullanılır.';
             break;
         }
 }
@@ -51,14 +63,14 @@ function sifreleVeGonder() {
     const anahtar = document.getElementById('anahtar').value;
     const yontem = document.getElementById('sifrele-yontem').value;
     
-    if (!mesaj || (!anahtar && yontem !== 'polybius')) {
+    if (!mesaj || (!anahtar && yontem !== 'polybius' && yontem !== 'pigpen')) {
         alert('Lütfen mesaj ve (bu yöntem için gerekliyse) anahtar girin!');
         return;
     }
 
     const data = {
         method: yontem,
-        key: anahtar || "0", // Polybius ise boş gitmesin diye "0" gönderebilirsin
+        key: anahtar || "0", 
         message: mesaj,
         encrypted: true
     };
