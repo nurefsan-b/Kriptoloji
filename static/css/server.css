@@ -70,3 +70,60 @@
             margin: 0;
             color: #1DCD9F;
         }
+
+        .file-message {
+            border-left: 4px solid #2196F3 !important;
+        }
+        .file-content {
+            background-color: #333;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        .file-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .download-btn {
+            background-color: #4CAF50;
+            color: white;
+            text-decoration: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 0.9em;
+            display: inline-block;
+        }
+        .decrypt-btn {
+            background-color: #2196F3;
+            color: white;
+            text-decoration: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 0.9em;
+            display: inline-block;
+        }
+        .method-badge {
+            background-color: #444;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.8em;
+            color: #aaa;
+        }
+        .timestamp {
+            font-size: 0.8em;
+            color: #666;
+            margin-left: auto;
+        }
+        .mesaj {
+            background-color: #2a2a2a;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border-left: 4px solid #1DCD9F;
+        }
+        .mesaj-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }

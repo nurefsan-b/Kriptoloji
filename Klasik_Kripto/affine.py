@@ -25,7 +25,7 @@ def affine_desifrele(cipher_text, a, b):
     if a_inv is None:
         raise ValueError(f"a={a} için mod {m} altında ters yok!")
     
-    for char in cipher_text.upper():
+    for char in cipher_text.lower():
         if char in alfabe:
             y = alfabe.index(char)
             x = (a_inv * (y - b)) % m
@@ -33,14 +33,3 @@ def affine_desifrele(cipher_text, a, b):
         else:
             plain_text += char
     return plain_text
-
-
-a, b = 5, 8  
-mesaj = "HELLO WORLD"
-
-sifrelenmis = affine_sifrele(mesaj, a, b)
-cozulmus = affine_desifrele(sifrelenmis, a, b)
-
-print("Orijinal:", mesaj)
-print("Şifreli :", sifrelenmis)
-print("Çözülmüş:", cozulmus)

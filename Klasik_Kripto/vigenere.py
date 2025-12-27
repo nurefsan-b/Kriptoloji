@@ -25,6 +25,3 @@ def vigenere_desifreleme(cipher_text,key):
         if key_index==len(key):
             key_index=0
     return plain_text
-metin = 'IYIPAZARLAR'
-print(vigenere_sifreleme(metin, 'TATIL'))
-print(vigenere_desifreleme(vigenere_sifreleme(metin, 'TATIL'), 'TATIL'))

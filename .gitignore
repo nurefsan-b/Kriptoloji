@@ -1,47 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
 
-[Dd]ebug/
-[Rr]elease/
-[Bb]in/
-[Oo]bj/
-[Oo]ut/
-build/
-Build/
-*.[Pp]db
-*.dll
-*.exe
+# Virtual Environment
+env/
+venv/
+.venv/
+ENV/
 
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
 
-[Tt]emp/
-[Tt]mp/
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
 *.log
 
-
-
-
-*.vspscc
-*.vssscc
-*.suo
-*.user
-*.userossc
-*.sln.docstates
-
-*.ncb
-*.workspace
-*.ide
-
-*/_vti_cnf
-
-[Pp]ackages/
-
-*.nupkg
-packages.lock.json
-
-
-Thumbs.db
-Desktop.ini
-.DS_Store
-*.dotSettings
-*.DotSettings.user
-.vscode/
-**/publish/
-**/tmp/
+# Local config
+.env
+.env.local

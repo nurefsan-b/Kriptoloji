@@ -1,61 +1,127 @@
 <!DOCTYPE html>
 <html lang="tr">
+
 <head>
     <meta charset="UTF-8">
     <title>Mesaj Şifreleme</title>
     <link rel="stylesheet" href="/static/css/client.css">
 </head>
+
 <body>
     <div class="container">
         <div class="header">
             <img src="/static/images/lock.webp" alt="Kilit İkonu">
             <h2 style="color: white;">İstemci - Mesaj Şifreleme</h2>
         </div>
-        
+
+        <div class="settings-section">
+            <h3>Bağlantı Ayarları</h3>
+            <div style="display: flex; gap: 10px;">
+                <input type="text" id="server-url" placeholder="localhost:8000" value="localhost:8000">
+                <button class="button" onclick="connectWebSocket()" style="width: auto;">Bağlan</button>
+            </div>
+            <div id="connection-status" style="color: red; margin-top: 5px;">Bağlı Değil</div>
+        </div>
+
+        <div class="key-display-section">
+            <h3>Anahtar Bilgileri (ECDH)</h3>
+            <div class="key-grid">
+                <div>
+                    <label>Yerel Public Key <button class="copy-btn"
+                            onclick="copyToClipboard('local-pub')">Kopyala</button></label>
+                    <textarea id="local-pub" readonly rows="3"></textarea>
+                </div>
+                <div>
+                    <label>Sunucu Public Key <button class="copy-btn"
+                            onclick="copyToClipboard('server-pub')">Kopyala</button></label>
+                    <textarea id="server-pub" readonly rows="3"></textarea>
+                </div>
+                <div>
+                    <label>Ortak Anahtar (Shared Secret) <button class="copy-btn"
+                            onclick="copyToClipboard('shared-secret')">Kopyala</button></label>
+                    <textarea id="shared-secret" readonly rows="3"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-section">
+            <h3>RSA Anahtar Oluşturucu</h3>
+            <button class="button" onclick="generateRSAKeys()" style="width: auto; background-color: #2196F3;">RSA
+                Anahtarı Çifti Üret</button>
+            <div class="key-grid" style="margin-top: 10px;">
+                <div>
+                    <label>RSA Public Key (Şifreleme İçin) <button class="copy-btn"
+                            onclick="copyToClipboard('rsa-pub')">Kopyala</button></label>
+                    <textarea id="rsa-pub" readonly rows="3"
+                        placeholder="Oluşturulan Public Key buraya gelecek..."></textarea>
+                </div>
+                <div>
+                    <label>RSA Private Key (Deşifreleme İçin) <button class="copy-btn"
+                            onclick="copyToClipboard('rsa-priv')">Kopyala</button></label>
+                    <textarea id="rsa-priv" readonly rows="3"
+                        placeholder="Oluşturulan Private Key buraya gelecek..."></textarea>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="settings-section" style="border-top: 2px solid #555; padding-top: 15px; margin-bottom: 20px;">
+        <h3>Dijital İmza (ECDSA)</h3>
+        <p style="font-size: 0.9em; color: #aaa; margin-bottom: 10px;">Aşağıdaki mesaj kutusundaki metni sunucuya
+            imzalatabilir veya gelen imzayı doğrulayabilirsiniz.</p>
+
+        <div class="key-grid">
+            <div>
+                <label>İmza R Değeri</label>
+                <input type="text" id="dsa-r" placeholder="İmza (r)">
+            </div>
+            <div>
+                <label>İmza S Değeri</label>
+                <input type="text" id="dsa-s" placeholder="İmza (s)">
+            </div>
+        </div>
+
+        <div class="key-grid" style="margin-top: 10px;">
+            <div>
+                <label>Doğrulama İçin Public Key (X, Y)</label>
+                <div style="display: flex; gap: 5px;">
+                    <input type="text" id="dsa-pub-x" placeholder="Public X">
+                    <input type="text" id="dsa-pub-y" placeholder="Public Y">
+                </div>
+            </div>
+            <div style="display: flex; align-items: flex-end; gap: 10px;">
+                <button class="button" onclick="dsaSign()" style="background-color: #ff9800;">İmzala (Sign)</button>
+                <button class="button" onclick="dsaVerify()" style="background-color: #4CAF50;">Doğrula
+                    (Verify)</button>
+            </div>
+        </div>
+        <div id="dsa-status" style="margin-top: 10px; font-weight: bold;"></div>
+    </div>
+
     <div>
         <label>Şifreleme Yöntemi</label>
         <select id="sifrele-yontem">
-            <option value="caesar">Caesar Cipher</option>
-            <option value="vigenere">Vigenère Cipher</option>
+            <option value="none" selected disabled>Şifreleme Yöntemi Seçin</option>
+            <option value="caesar">Sezar Şifrelemesi</option>
+            <option value="vigenere">Vigenere Şifrelemesi</option>
             <option value="substitution">Substitution Cipher</option>
             <option value="affine">Affine Cipher</option>
             <option value="playfair">Playfair Cipher</option>
-            <option value="polybius">Polybius Cipher</option>
-            <option value="rail_fence">Rail Fence (Zikzak)</option>
-            <option value="pigpen">Pigpen (Mason) Şifresi</option>
+            <option value="polybius">Polybius Square</option>
+            <option value="rail_fence">Rail Fence Cipher</option>
+            <option value="pigpen">Pigpen Cipher</option>
+            <option value="hill">Hill Cipher (Matris)</option>
+            <option value="columnar">Columnar Transposition</option>
+            <option value="route">Route Cipher (Transposition)</option>
+            <option value="rotate">Rotate (ROT-13/47)</option>
+            <option value="sha1">SHA-1 (Hash)</option>
+            <option value="sha2">SHA-256 (Hash)</option>
+            <option value="aes">AES (Simetrik - Manuel)</option>
+            <option value="des">DES (Simetrik 64-bit)</option>
+            <option value="rsa">RSA (Asimetrik)</option>
         </select>
     </div>
-
-    <div class="settings-section" style="border-top: 2px solid #555; padding-top: 15px;">
-            <h3>Dijital İmza (ECDSA)</h3>
-            <p style="font-size: 0.9em; color: #aaa; margin-bottom: 10px;">Aşağıdaki mesaj kutusundaki metni sunucuya imzalatabilir veya gelen imzayı doğrulayabilirsiniz.</p>
-            
-            <div class="key-grid">
-                <div>
-                    <label>İmza R Değeri</label>
-                    <input type="text" id="dsa-r" placeholder="İmza (r)">
-                </div>
-                <div>
-                    <label>İmza S Değeri</label>
-                    <input type="text" id="dsa-s" placeholder="İmza (s)">
-                </div>
-            </div>
-
-            <div class="key-grid" style="margin-top: 10px;">
-                <div>
-                    <label>Doğrulama İçin Public Key (X, Y)</label>
-                    <div style="display: flex; gap: 5px;">
-                        <input type="text" id="dsa-pub-x" placeholder="Public X">
-                        <input type="text" id="dsa-pub-y" placeholder="Public Y">
-                    </div>
-                </div>
-                <div style="display: flex; align-items: flex-end; gap: 10px;">
-                    <button class="button" onclick="dsaSign()" style="background-color: #ff9800;">İmzala (Sign)</button>
-                    <button class="button" onclick="dsaVerify()" style="background-color: #4CAF50;">Doğrula (Verify)</button>
-                </div>
-            </div>
-            <div id="dsa-status" style="margin-top: 10px; font-weight: bold;"></div>
-        </div>
 
     <div>
         <label>Anahtar</label>
@@ -63,16 +129,26 @@
         <small id="anahtar-aciklama"></small>
     </div>
 
-        <div>
-            <label>Mesaj</label>
-            <textarea id="mesaj" rows="4" placeholder="Şifrelenecek mesajınızı buraya yazın..."></textarea>
-        </div>
+    <div>
+        <label>Mesaj</label>
+        <textarea id="mesaj" rows="4" placeholder="Şifrelenecek mesajınızı buraya yazın..."></textarea>
+    </div>
 
-        <button class="button" onclick="sifreleVeGonder()">
-            <img src="/static/images/lock.webp" alt="Kilit İkonu">
-            Şifrele ve Gönder
+    <div style="margin-bottom: 15px; border-top: 1px solid #444; padding-top: 15px;">
+        <label>Veya Dosya Yükle</label>
+        <input type="file" id="dosya-input" style="color: white;">
+        <button class="button" onclick="dosyaGonder()" style="margin-top: 10px; background-color: #4CAF50;">
+            <img src="/static/images/lock.webp" alt="Kilit" style="width: 20px;">
+            Dosyayı Şifrele ve Sunucuya Gönder
         </button>
+    </div>
+
+    <button class="button" onclick="sifreleVeGonder()">
+        <img src="/static/images/lock.webp" alt="Kilit İkonu">
+        Şifrele ve Gönder
+    </button>
     </div>
     <script src="/static/js/client.js"></script>
 </body>
+
 </html>

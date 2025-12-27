@@ -5,12 +5,14 @@
             padding: 20px;
             background-color: #000000;
         }
+
         .container {
             background-color: #222222;
             padding: 20px;
             border-radius: 8px;
             margin-bottom: 20px;
         }
+
         .button {
             background-color: #1DCD9F;
             color: black;
@@ -22,11 +24,15 @@
             align-items: center;
             gap: 8px;
         }
+
         .button img {
             width: 20px;
             height: 20px;
         }
-        select, input, textarea {
+
+        select,
+        input,
+        textarea {
             width: 100%;
             padding: 8px;
             margin: 8px 0;
@@ -35,21 +41,79 @@
             box-sizing: border-box;
             background-color: #1DCD9F;
         }
+
         label {
             font-weight: bold;
             color: #666;
         }
-          .header {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin-bottom: 20px;
-    }
-    .header img {
-        width: 20px; 
-        height: 24px;
-    }
-    .button img {
-        width: 12px;
-        height: 16px;
-    }
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .header img {
+            width: 20px;
+            height: 24px;
+        }
+
+        .button img {
+            width: 12px;
+            height: 16px;
+        }
+
+        .settings-section,
+        .key-display-section {
+            background-color: #333;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #444;
+        }
+
+        .settings-section h3,
+        .key-display-section h3 {
+            color: #1DCD9F;
+            margin-top: 0;
+            border-bottom: 1px solid #555;
+            padding-bottom: 10px;
+        }
+
+        .key-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .key-grid label {
+            display: block;
+            margin-bottom: 5px;
+            color: #aaa;
+            font-size: 0.9em;
+        }
+
+        .key-grid textarea {
+            background-color: #222;
+            color: #0f0;
+            font-family: monospace;
+            font-size: 0.8em;
+            resize: vertical;
+        }
+
+        .timing-info {
+            color: #ff9800;
+            /* Orange for visibility */
+            font-size: 0.85em;
+            margin-top: 5px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        .copy-btn:hover {
+            background-color: #0b7dda;
+        }
