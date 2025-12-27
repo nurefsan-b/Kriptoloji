@@ -26,6 +26,37 @@
         </select>
     </div>
 
+    <div class="settings-section" style="border-top: 2px solid #555; padding-top: 15px;">
+            <h3>Dijital İmza (ECDSA)</h3>
+            <p style="font-size: 0.9em; color: #aaa; margin-bottom: 10px;">Aşağıdaki mesaj kutusundaki metni sunucuya imzalatabilir veya gelen imzayı doğrulayabilirsiniz.</p>
+            
+            <div class="key-grid">
+                <div>
+                    <label>İmza R Değeri</label>
+                    <input type="text" id="dsa-r" placeholder="İmza (r)">
+                </div>
+                <div>
+                    <label>İmza S Değeri</label>
+                    <input type="text" id="dsa-s" placeholder="İmza (s)">
+                </div>
+            </div>
+
+            <div class="key-grid" style="margin-top: 10px;">
+                <div>
+                    <label>Doğrulama İçin Public Key (X, Y)</label>
+                    <div style="display: flex; gap: 5px;">
+                        <input type="text" id="dsa-pub-x" placeholder="Public X">
+                        <input type="text" id="dsa-pub-y" placeholder="Public Y">
+                    </div>
+                </div>
+                <div style="display: flex; align-items: flex-end; gap: 10px;">
+                    <button class="button" onclick="dsaSign()" style="background-color: #ff9800;">İmzala (Sign)</button>
+                    <button class="button" onclick="dsaVerify()" style="background-color: #4CAF50;">Doğrula (Verify)</button>
+                </div>
+            </div>
+            <div id="dsa-status" style="margin-top: 10px; font-weight: bold;"></div>
+        </div>
+
     <div>
         <label>Anahtar</label>
         <input type="text" id="anahtar" placeholder="Şifreleme anahtarını girin">

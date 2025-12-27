@@ -80,3 +80,85 @@ function sifreleVeGonder() {
     document.getElementById('anahtar').value = '';
     alert('Mesaj gönderildi!');
 }
+
+async function dsaSign() {
+    const mesaj = document.getElementById('mesaj').value;
+    const statusDiv = document.getElementById('dsa-status');
+    
+    if (!mesaj) {
+        alert("Lütfen imzalanacak bir mesaj girin!");
+        return;
+    }
+
+    statusDiv.textContent = "İmzalanıyor...";
+    statusDiv.style.color = "yellow";
+
+    try {
+        const response = await fetch('/dsa/sign', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: mesaj })
+        });
+
+        const data = await response.json();
+
+        document.getElementById('dsa-r').value = data.signature_r;
+        document.getElementById('dsa-s').value = data.signature_s;
+        
+        document.getElementById('dsa-pub-x').value = data.public_key_x;
+        document.getElementById('dsa-pub-y').value = data.public_key_y;
+
+        statusDiv.textContent = "Mesaj İmzalandı! (R ve S değerleri alındı)";
+        statusDiv.style.color = "#4CAF50";
+
+    } catch (e) {
+        console.error(e);
+        statusDiv.textContent = "İmzalama Hatası!";
+        statusDiv.style.color = "red";
+    }
+}
+
+async function dsaVerify() {
+    const mesaj = document.getElementById('mesaj').value;
+    const r = document.getElementById('dsa-r').value;
+    const s = document.getElementById('dsa-s').value;
+    const pubX = document.getElementById('dsa-pub-x').value;
+    const pubY = document.getElementById('dsa-pub-y').value;
+    const statusDiv = document.getElementById('dsa-status');
+
+    if (!mesaj || !r || !s) {
+        alert("Lütfen mesaj ve imza (r, s) alanlarını doldurun!");
+        return;
+    }
+
+    statusDiv.textContent = "Doğrulanıyor...";
+    statusDiv.style.color = "yellow";
+
+    const payload = {
+        message: mesaj,
+        signature_r: r,
+        signature_s: s
+    };
+    if (pubX && pubY) {
+        payload.public_key_x = pubX;
+        payload.public_key_y = pubY;
+    }
+
+    try {
+        const response = await fetch('/dsa/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+
+        statusDiv.textContent = data.status;
+        statusDiv.style.color = data.valid ? "#4CAF50" : "red";
+
+    } catch (e) {
+        console.error(e);
+        statusDiv.textContent = "Doğrulama sunucu hatası!";
+        statusDiv.style.color = "red";
+    }
+}
