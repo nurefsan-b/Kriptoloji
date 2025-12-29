@@ -16,6 +16,37 @@ from Klasik_Kripto.playfair import playfair_encrypt, playfair_decrypt
 from Klasik_Kripto.polybius import polybius_sifrele, polybius_desifrele
 from Klasik_Kripto.rail_fence import rail_fence_sifrele, rail_fence_desifrele
 from Klasik_Kripto.pigpen import pigpen_sifrele, pigpen_desifrele
+from Klasik_Kripto.pigpen import pigpen_sifrele, pigpen_desifrele
+from Crypto.Cipher import AES as LibAES
+from Crypto.Cipher import DES as LibDES
+from Crypto.Util.Padding import unpad
+import base64
+
+def aes_desifre_lib(ciphertext_b64, key):
+    try:
+        if len(key) not in [16, 24, 32]:
+             key = (key + '\0'*16)[:16]
+        
+        key_bytes = key.encode('utf-8')
+        cipher = LibAES.new(key_bytes, LibAES.MODE_ECB)
+        data = base64.b64decode(ciphertext_b64)
+        decrypted = cipher.decrypt(data)
+        return unpad(decrypted, LibAES.block_size).decode('utf-8')
+    except Exception as e:
+        return f"Library Decryption Error: {e}"
+
+def des_desifre_lib(ciphertext_b64, key):
+    try:
+        if len(key) != 8:
+             key = (key + '\0'*8)[:8]
+        
+        key_bytes = key.encode('utf-8')
+        cipher = LibDES.new(key_bytes, LibDES.MODE_ECB)
+        data = base64.b64decode(ciphertext_b64)
+        decrypted = cipher.decrypt(data)
+        return unpad(decrypted, LibDES.block_size).decode('utf-8')
+    except Exception as e:
+        return f"Library Decryption Error: {e}"
 
 class CryptoMethods:
     @staticmethod
@@ -25,7 +56,7 @@ class CryptoMethods:
     @staticmethod
     def compute_ecdh_secret(private_key, other_public_key):
         secret_point = EllipticCurve.scalar_mult(private_key, other_public_key)
-        return str(secret_point[0]) # Return x-coord as string for simplicity as key
+        return str(secret_point[0]) 
 
     @staticmethod
     def sign_message(text, private_key):
@@ -97,7 +128,7 @@ class CryptoMethods:
             raise ValueError(f"Şifreleme hatası: {str(e)}")
 
     @staticmethod
-    def decrypt(method: str, text: str, key: str) -> str:
+    def decrypt(method: str, text: str, key: str, implementation: str = 'manual') -> str:
         try:
             if method == "hill":
                 degerler = list(map(int, key.split(',')))
@@ -115,6 +146,8 @@ class CryptoMethods:
             elif method == "rotate":
                 return rotate_desifre(text, int(key))
             elif method == "aes":
+                if implementation == "library":
+                    return aes_desifre_lib(text, key)
                 return aes_desifre(text, key)
             elif method == "rsa":
                 d, n = map(int, key.split(','))
@@ -123,6 +156,8 @@ class CryptoMethods:
             elif method == "columnar":
                 return columnar_desifre(text, key)
             elif method == "des":
+                if implementation == "library":
+                    return des_desifre_lib(text, key)
                 return des_desifre(text, key)
             elif method == "route":
                 try:

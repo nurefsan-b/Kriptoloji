@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <title>Mesaj Şifreleme</title>
     <link rel="stylesheet" href="/static/css/client.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 </head>
 
 <body>
@@ -100,6 +101,14 @@
     </div>
 
     <div>
+        <label>İmplementasyon Modu</label>
+        <select id="implementasyon-modu">
+            <option value="library">Kütüphane (CryptoJS)</option>
+            <option value="manual">Manuel (Özel Kod)</option>
+        </select>
+    </div>
+
+    <div>
         <label>Şifreleme Yöntemi</label>
         <select id="sifrele-yontem">
             <option value="none" selected disabled>Şifreleme Yöntemi Seçin</option>
@@ -148,6 +157,8 @@
         Şifrele ve Gönder
     </button>
     </div>
+    <script src="/static/js/aes_manual.js"></script>
+    <script src="/static/js/rsa_manual.js"></script>
     <script src="/static/js/client.js"></script>
 </body>
 

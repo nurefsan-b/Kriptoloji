@@ -37,6 +37,11 @@ class CryptoServer:
         self.crypto = CryptoMethods()
         self.manager = ConnectionManager()
         self.templates = Jinja2Templates(directory="templates")
+        
+        from Klasik_Kripto.rsa import rsa_anahtar_uret
+        self.server_public_key, self.server_private_key = rsa_anahtar_uret(512)
+        print(f"Sunucu RSA Anahtarları Üretildi: Public={self.server_public_key}")
+
         self.setup_routes()
         self.setup_static()
 
@@ -60,9 +65,15 @@ class CryptoServer:
             except WebSocketDisconnect:
                 self.manager.disconnect(websocket)
 
+        @self.app.get("/get-server-public-key")
+        async def get_server_public_key():
+            return {
+                "public_key": [str(x) for x in self.server_public_key]
+            }
+
         @self.app.get("/decrypt")
-        async def decrypt_message(method: str, cipher_text: str, key: str):
-            return await self.handle_decryption(method, cipher_text, key)
+        async def decrypt_message(method: str, cipher_text: str, key: str, implementation: str = 'manual'):
+            return await self.handle_decryption(method, cipher_text, key, implementation)
 
         @self.app.post("/upload-encrypt")
         async def upload_encrypt(
@@ -200,13 +211,12 @@ class CryptoServer:
         @self.app.get("/generate-rsa-keys")
         async def generate_rsa_keys():
             from Klasik_Kripto.rsa import rsa_anahtar_uret
-            public_key, private_key = rsa_anahtar_uret(512) # 512-bit for speed in demo
+            public_key, private_key = rsa_anahtar_uret(512) 
             return {
                 "public_key": [str(x) for x in public_key],
                 "private_key": [str(x) for x in private_key]
             }
 
-        # DSA Endpoints
         from pydantic import BaseModel
         class DSASignRequest(BaseModel):
             message: str
@@ -224,7 +234,6 @@ class CryptoServer:
             from Klasik_Kripto.ecc import EllipticCurve
             
             dsa = ECDSAManager()
-            # Generate temporary keypair for checking if not stored
             priv_key, pub_key = EllipticCurve.generate_keypair()
             
             signature = dsa.sign(priv_key, request.message)
@@ -269,7 +278,26 @@ class CryptoServer:
             return
 
         if data.get('encrypted'):
-            data = await self.encrypt_message(data)
+            await self.log_decrypted_message(data)
+        else:
+            method = data.get('method')
+            message = data.get('message')
+            key = data.get('key', '')
+            
+            if method and message:
+                try:
+                    encrypted_text = self.crypto.encrypt(method, message, key)
+                    data['message'] = encrypted_text
+                    data['encrypted'] = True
+                    print(f"\n--- [SUNUCU] Klasik Şifreleme Yapıldı ---")
+                    print(f"Yöntem: {method}")
+                    print(f"Plaintext: {message}")
+                    print(f"Ciphertext: {encrypted_text}")
+                    print("-----------------------------------------\n")
+                except Exception as e:
+                    print(f"Sunucu şifreleme hatası: {e}")
+                    data['server_error'] = str(e)
+            
         await self.manager.broadcast(data, websocket)
 
     async def handle_handshake(self, data: Dict, websocket: WebSocket):
@@ -292,31 +320,57 @@ class CryptoServer:
             print(f"Handshake error: {e}")
             await websocket.send_text(json.dumps({'error': 'Handshake failed'}))
 
-    async def encrypt_message(self, data: Dict) -> Dict:
-        import time
-        start_time = time.time()
+    async def log_decrypted_message(self, data: Dict):
         try:
-            encrypted_message = self.crypto.encrypt(
-                data['method'],
-                data['message'],
-                data['key']
-            )
-        except Exception as e:
-            encrypted_message = f"HATA: {str(e)}"
+            method = data['method']
+            cipher_text = data['message']
+            key_param = data['key']
+            implementation = data.get('implementation', 'manual')
             
-        end_time = time.time()
-        duration_ms = (end_time - start_time) * 1000
-        
-        data['encrypted_message'] = encrypted_message
-        data['original_message'] = data['message']
-        data['duration_ms'] = f"{duration_ms:.4f}"
-        return data
+            if method == 'rsa':
+                print(f"[HYBRID RSA] Decrypting Session Key...")
+                from Klasik_Kripto.rsa import rsa_desifre_metin
+                try:
+                    session_key = rsa_desifre_metin(key_param, self.server_private_key)
+                    print(f"[HYBRID RSA] Decrypted Session Key: {session_key}")
+                    
+                    decrypted = self.crypto.decrypt('aes', cipher_text, session_key, implementation)
+                    
+                    print(f"\n--- [SUNUCU LOG] RSA Hybrid Mesajı Alındı ---")
+                    print(f"Encrypted Key: {key_param[:20]}...")
+                    print(f"Decrypted Session Key: {session_key}")
+                    print(f"Ciphertext: {cipher_text}")
+                    print(f"DECRYPTED MESSAGE: {decrypted}")
+                    print("----------------------------------------------\n")
+                    data['decrypted_message'] = decrypted
+                    return
+                except Exception as e:
+                     print(f"[HYBRID RSA] Error: {e}")
+                     return
 
-    async def handle_decryption(self, method: str, cipher_text: str, key: str) -> Dict:
+            decrypted = self.crypto.decrypt(
+                method,
+                cipher_text,
+                key_param,
+                implementation
+            )
+            print(f"\n--- [SUNUCU LOG] Şifreli Mesaj Alındı ---")
+            print(f"Yöntem: {method} ({implementation})")
+            print(f"Ciphertext: {cipher_text}")
+            print(f"Key: {key_param}")
+            print(f"DECRYPTED: {decrypted}")
+            print("-----------------------------------------\n")
+            data['decrypted_message'] = decrypted
+            
+        except Exception as e:
+            print(f"Sunucu Çözme Hatası: {e}")
+            data['server_error'] = str(e)
+
+    async def handle_decryption(self, method: str, cipher_text: str, key: str, implementation: str = 'manual') -> Dict:
         import time
         try:
             start_time = time.time()
-            decrypted_message = self.crypto.decrypt(method, cipher_text, key)
+            decrypted_message = self.crypto.decrypt(method, cipher_text, key, implementation)
             end_time = time.time()
             duration_ms = (end_time - start_time) * 1000
             

@@ -82,11 +82,11 @@ def playfair_encrypt(plaintext, key):
         a, b = text[i], text[i + 1]
         r1, c1 = find_position(square, a)
         r2, c2 = find_position(square, b)
-        if r1 == r2:  # same row
+        if r1 == r2:  
             result += square[r1][(c1 + 1) % 5] + square[r2][(c2 + 1) % 5]
-        elif c1 == c2:  # same column
+        elif c1 == c2: 
             result += square[(r1 + 1) % 5][c1] + square[(r2 + 1) % 5][c2]
-        else:  # rectangle rule
+        else:  
             result += square[r1][c2] + square[r2][c1]
     return result
 
@@ -97,11 +97,11 @@ def playfair_decrypt(ciphertext, key):
         a, b = ciphertext[i], ciphertext[i + 1]
         r1, c1 = find_position(square, a)
         r2, c2 = find_position(square, b)
-        if r1 == r2:  # same row
+        if r1 == r2: 
             result += square[r1][(c1 - 1) % 5] + square[r2][(c2 - 1) % 5]
-        elif c1 == c2:  # same column
+        elif c1 == c2: 
             result += square[(r1 - 1) % 5][c1] + square[(r2 - 1) % 5][c2]
-        else:  # rectangle rule
+        else:  
             result += square[r1][c2] + square[r2][c1]
     return result
 

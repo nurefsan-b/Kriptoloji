@@ -91,7 +91,6 @@ def rail_fence_desifrele(sifre, ray_sayisi):
         
     return "".join(cozulmus_metin)
 
-# Örnek kullanım
 if __name__ == "__main__":
     ornek_metin = "kriptoloji dersi"
     anahtar = 3

@@ -1,4 +1,5 @@
 let ws;
+let serverRSAPublicKey;
 let localKeyPair;
 let sharedSecret;
 
@@ -47,7 +48,7 @@ async function handleHandshakeResponse(data) {
         const pubX = BigInt(data.public_key_x);
         const pubY = BigInt(data.public_key_y);
 
-        // Show Full Key
+
         document.getElementById('server-pub').value = `X: ${data.public_key_x}\nY: ${data.public_key_y}`;
 
         const xHex = pubX.toString(16).padStart(64, '0');
@@ -79,7 +80,7 @@ async function handleHandshakeResponse(data) {
 
         const method = document.getElementById('sifrele-yontem').value;
         if (method === 'aes' || method === 'des') {
-            updateKeyHint(); // Update key input if needed
+            updateKeyHint();
         }
 
         console.log("Handshake successful. Shared Secret Established.");
@@ -87,8 +88,6 @@ async function handleHandshakeResponse(data) {
         console.error("Handshake failed:", error);
     }
 }
-
-// Old onmessage handler removed. Logic moved to connectWebSocket and handleHandshakeResponse.
 
 async function initiateHandshake() {
     try {
@@ -102,8 +101,6 @@ async function initiateHandshake() {
         const keyBytes = new Uint8Array(exported);
         const x = BigInt('0x' + buf2hex(keyBytes.slice(1, 33)));
         const y = BigInt('0x' + buf2hex(keyBytes.slice(33, 65)));
-
-        // Show Full Key
         document.getElementById('local-pub').value = `X: ${x.toString()}\nY: ${y.toString()}`;
 
         ws.send(JSON.stringify({
@@ -121,7 +118,7 @@ function copyToClipboard(elementId) {
     copyText.select();
     copyText.setSelectionRange(0, 99999);
     navigator.clipboard.writeText(copyText.value).then(() => {
-        // Optional: Tooltip or temporary indication
+
         const originalBg = copyText.style.backgroundColor;
         copyText.style.backgroundColor = "#4CAF50";
         setTimeout(() => {
@@ -131,12 +128,6 @@ function copyToClipboard(elementId) {
 }
 
 async function generateRSAKeys() {
-    // This is a client-side simple verification generator or we can ask server
-    // Since we have 'rsa.py' on server, let's ask server for valid Pythonesque RSA keys
-    // OR generate locally. Since 'rsa' method in client checks for 'e,n', let's stick to server format.
-    // However, JS WebCrypto RSA keys are complex to export to 'e,n' simple integer format used by Python backend.
-    // EASIEST: Call an endpoint on server to generate keys.
-
     try {
         const response = await fetch('/generate-rsa-keys');
         const data = await response.json();
@@ -163,7 +154,17 @@ document.addEventListener('DOMContentLoaded', function () {
     const methodSelect = document.getElementById('sifrele-yontem');
     methodSelect.addEventListener('change', updateKeyHint);
     updateKeyHint();
-    connectWebSocket(); // Auto-connect with default
+    connectWebSocket();
+
+    fetch('/get-server-public-key')
+        .then(response => response.json())
+        .then(data => {
+            if (data.public_key) {
+                serverRSAPublicKey = data.public_key.join(',');
+                console.log("Sunucu RSA Public Key Alındı:", serverRSAPublicKey);
+            }
+        })
+        .catch(err => console.error("RSA Key fetch failed:", err));
 });
 
 function updateKeyHint() {
@@ -171,7 +172,7 @@ function updateKeyHint() {
     const keyInput = document.getElementById('anahtar');
     const keyHint = document.getElementById('anahtar-aciklama');
 
-    keyInput.disabled = false; // Reset disabled state by default
+    keyInput.disabled = false;
 
     if (sharedSecret) {
         if (method === 'aes') {
@@ -179,7 +180,7 @@ function updateKeyHint() {
         } else if (method === 'des') {
             keyInput.value = sharedSecret.substring(0, 8);
         } else {
-            keyInput.value = ''; // Clear for others
+            keyInput.value = '';
         }
     } else {
         keyInput.value = '';
@@ -287,6 +288,7 @@ function sifreleVeGonder() {
     const mesaj = document.getElementById('mesaj').value;
     const anahtar = document.getElementById('anahtar').value;
     const yontem = document.getElementById('sifrele-yontem').value;
+    const mod = document.getElementById('implementasyon-modu').value;
 
     const noKeyMethods = ['sha1', 'sha2', 'pigpen', 'polybius'];
 
@@ -295,22 +297,76 @@ function sifreleVeGonder() {
         return;
     }
 
-    if (!noKeyMethods.includes(yontem) && !anahtar) {
+    if (!noKeyMethods.includes(yontem) && !anahtar && yontem !== 'rsa') {
         alert('Lütfen anahtar girin!');
         return;
     }
 
+    let cipherText = "";
+    let finalKeyToSend = anahtar;
+    let isEncrypted = false;
+    try {
+        if (yontem === 'rsa') {
+            const sessionKey = Array.from({ length: 16 }, () => Math.floor(Math.random() * 10).toString()).join('') + 'ABCDEF'.substring(0, 6);
+            const actualSessionKey = sessionKey.slice(0, 16);
+            if (mod === 'library') {
+                const keyBytes = CryptoJS.enc.Utf8.parse(actualSessionKey);
+                cipherText = CryptoJS.AES.encrypt(mesaj, keyBytes, { mode: CryptoJS.mode.ECB, padding: CryptoJS.pad.Pkcs7 }).toString();
+            } else {
+                cipherText = ManualAES.encrypt(mesaj, actualSessionKey);
+            }
+            isEncrypted = true;
+
+            if (!serverRSAPublicKey) {
+                alert("Sunucu RSA anahtarı alınamadı! Lütfen sayfayı yenileyin.");
+                return;
+            }
+            finalKeyToSend = ManualRSA.encrypt(actualSessionKey, serverRSAPublicKey);
+            console.log("Hybrid RSA: Encrypted Key sent:", finalKeyToSend);
+        }
+        else if (yontem === 'aes') {
+            if (mod === 'library') {
+                const keyBytes = CryptoJS.enc.Utf8.parse(anahtar.padEnd(16, '\0').slice(0, 16));
+                cipherText = CryptoJS.AES.encrypt(mesaj, keyBytes, { mode: CryptoJS.mode.ECB, padding: CryptoJS.pad.Pkcs7 }).toString();
+            } else {
+                cipherText = ManualAES.encrypt(mesaj, anahtar);
+            }
+            isEncrypted = true;
+        }
+        else if (yontem === 'des') {
+            // DES uses CryptoJS library for both modes (no manual JS implementation)
+            const keyBytes = CryptoJS.enc.Utf8.parse(anahtar.padEnd(8, '\0').slice(0, 8));
+            cipherText = CryptoJS.DES.encrypt(mesaj, keyBytes, { mode: CryptoJS.mode.ECB, padding: CryptoJS.pad.Pkcs7 }).toString();
+            isEncrypted = true;
+        }
+        else {
+            cipherText = mesaj;
+            isEncrypted = false;
+        }
+    } catch (e) {
+        console.error(e);
+        alert("Şifreleme Hatası: " + e);
+        return;
+    }
+
+    let actualImplementation = mod;
+
     const data = {
         method: yontem,
-        key: noKeyMethods.includes(yontem) ? '' : anahtar,
-        message: mesaj,
-        encrypted: true
+        key: finalKeyToSend,
+        message: isEncrypted ? cipherText : mesaj,
+        encrypted: isEncrypted,
+        implementation: actualImplementation
     };
 
     ws.send(JSON.stringify(data));
     document.getElementById('mesaj').value = '';
-    document.getElementById('anahtar').value = '';
-    alert('Mesaj gönderildi!');
+
+    if (yontem === 'rsa') {
+        alert('Mesaj ve Otomatik Oturum Anahtarı (RSA ile) şifrelenip gönderildi!');
+    } else {
+        alert('Mesaj ' + (isEncrypted ? 'şifrelenip ' : '') + 'gönderildi!');
+    }
 }
 
 async function dosyaGonder() {

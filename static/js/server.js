@@ -62,29 +62,43 @@ function verifyAndDownload(filename, method, correctKey, uniqueId) {
 
 function renderTextMessage(container, data, uniqueId) {
     const isHash = data.method === 'sha1' || data.method === 'sha2';
+    const isRSA = data.method === 'rsa';
     const keyDetails = getKeyInputDetails(data.method);
 
-    container.innerHTML = `
-        <div class="mesaj-header">
-            <span class="method-badge">${data.method}</span>
-            <span class="timestamp">${new Date().toLocaleTimeString()}</span>
-        </div>
-        <p><strong>${isHash ? 'Hash Değeri' : 'Şifreli Mesaj'}:</strong> ${data.encrypted_message}</p>
-        ${data.duration_ms ? `<p class="timing-info">⏱️ İşlem Süresi: ${data.duration_ms} ms</p>` : ''}
-        ${isHash ? '<p class="hash-note"><em>Hash tek yönlüdür, deşifre edilemez.</em></p>' : `
+    let decipherSection = '';
+    if (isHash) {
+        decipherSection = '<p class="hash-note"><em>Hash tek yönlüdür, deşifre edilemez.</em></p>';
+    } else if (isRSA) {
+        if (data.decrypted_message) {
+            decipherSection = `<p class="decrypted-display" style="background: #2e7d32; color: #fff; padding: 10px; border-radius: 5px; margin-top: 10px;"><strong>Çözülmüş Mesaj:</strong> ${data.decrypted_message}</p>`;
+        } else {
+            decipherSection = '<p class="rsa-note" style="color: #ff9800;"><em>RSA Hybrid: Çözme bekleniyor...</em></p>';
+        }
+    } else {
+        decipherSection = `
         <div class="decipher-section">
             <input type="${keyDetails.type}" id="key_${uniqueId}" 
                    placeholder="${keyDetails.placeholder}" 
                    class="decipher-input"
                    ${keyDetails.disabled ? 'disabled' : ''}>
-            <button class="button" onclick="desifrele('${data.encrypted_message}', '${data.method}', ${uniqueId})">
+            <button class="button" onclick="desifrele('${data.message}', '${data.method}', ${uniqueId}, '${data.implementation || 'manual'}')">
                 <img src="/static/images/lock.webp" alt="Kilit İkonu">
                 Deşifre Et
             </button>
         </div>
         <small class="key-hint" style="color: #666; font-size: 0.8em; margin-top: 5px; display: block;">${keyDetails.hint}</small>
         <div id="decrypted_${uniqueId}" class="decrypted-message" style="display: none;"></div>
-        `}
+        `;
+    }
+
+    container.innerHTML = `
+        <div class="mesaj-header">
+            <span class="method-badge">${data.method}</span>
+            <span class="timestamp">${new Date().toLocaleTimeString()}</span>
+        </div>
+        <p><strong>${isHash ? 'Hash Değeri' : 'Şifreli Mesaj'}:</strong> ${data.message}</p>
+        ${data.duration_ms ? `<p class="timing-info">⏱️ İşlem Süresi: ${data.duration_ms} ms</p>` : ''}
+        ${decipherSection}
     `;
 }
 
@@ -191,7 +205,7 @@ function getKeyInputDetails(method) {
     }
 }
 
-async function desifrele(encryptedMessage, method, uniqueId) {
+async function desifrele(encryptedMessage, method, uniqueId, implementation = 'manual') {
     try {
         const key = document.getElementById(`key_${uniqueId}`).value;
         const noKeyMethods = ['sha1', 'sha2', 'pigpen', 'polybius'];
@@ -201,7 +215,7 @@ async function desifrele(encryptedMessage, method, uniqueId) {
             return;
         }
 
-        const response = await fetch(`/decrypt?method=${method}&cipher_text=${encryptedMessage}&key=${key}`);
+        const response = await fetch(`/decrypt?method=${method}&cipher_text=${encodeURIComponent(encryptedMessage)}&key=${encodeURIComponent(key)}&implementation=${implementation}`);
         const result = await response.json();
 
         if (result.error) {
